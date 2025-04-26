@@ -1,0 +1,15 @@
+import os
+import logging
+
+def search_files(directory, extensions):
+    found_files = []
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if file.endswith(tuple(extensions)):
+                found_files.append(os.path.join(root, file))
+    return found_files
+
+def log_files(file_list, log_file="files.log"):
+    logging.basicConfig(filename=log_file, level=logging.INFO)
+    for file in file_list:
+        logging.info(file)
